@@ -1,10 +1,11 @@
-FROM alpine/java:21-jdk AS build
+# Build stage
+FROM gradle:8.10.2-jdk21 AS build
 WORKDIR /app
-COPY . .
-RUN ./mvnw clean package -DskipTests
-RUN rm /app/target/*.jar.original
+COPY --chown=gradle:gradle . .
+RUN gradle build -x test
 
-FROM openjdk:21
-COPY --from=build /app/target/*.jar industria-digital.jar
+# Runtime stage
+FROM eclipse-temurin:21-jdk
+COPY --from=build /app/build/libs/*.jar industria-digital.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "industria-digital.jar"]
